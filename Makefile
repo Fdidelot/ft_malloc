@@ -1,61 +1,64 @@
-NAME		=	libft_malloc_$(HOSTTYPE).so
-LN_NAME		=	libft_malloc.so
+NAME	= $(LIB_DIR)/$(NAME_NO_PATH)
+NAME_NO_PATH = libft_malloc_$(HOSTTYPE).so
+SYMLINK = $(LIB_DIR)/libft_malloc.so
 
-ifeq ($(HOSTTYPE), )
-	HOSTTYPE := $(shell uname -n)_$(shell uname -s)
+INCLUDE_DIR = include
+SRC_DIR = src
+OBJ_DIR = obj
+LIB_DIR = lib
+
+SRCS =	malloc.c \
+		print.c \
+		block.c \
+		pages.c \
+		show_alloc_mem.c \
+		free.c \
+		realloc.c \
+		tools.c
+OBJS = $(patsubst %.c, $(OBJ_DIR)/%.o, $(SRCS))
+HEADER = libft_malloc.h
+
+vpath %.c $(SRC_DIR)
+vpath %.h $(INCLUDE_DIR)
+
+CC := gcc
+
+TEST_PROG := testprog
+
+CFLAGS := -Wall -Wextra -Werror -shared -fPIC -I$(INCLUDE_DIR)
+
+ifeq ($(HOSTTYPE),)
+	HOSTTYPE := $(shell uname -m)_$(shell uname -s)
 endif
 
-OBJ_DIR =	./objs
-SRC_DIR =	./srcs
+all : $(NAME)
 
-SRC		=	ft_malloc.c \
-			print_hexa.c
+$(NAME) : Makefile $(OBJS) | $(LIB_DIR)
+	$(CC) $(CFLAGS) -o $@ $(OBJS)
+	ln -sf $(NAME_NO_PATH) $(SYMLINK)
 
-OBJ		=	$(SRC:.c=.o)
-OBJS	=	$(OBJ:%=$(OBJ_DIR)/%)
-
-AC		=	ar rc
-RANLIB	=	ranlib
-RM		=	rm -rf
-ECHO	=	echo
-
-CC		=	gcc
-CFLAGS	=	-Wall -Wextra -Werror
-LDFLAGS =	-L.
-LDLIBS  =	-l
-
-all: $(NAME)
-
-clean:
-	$(RM) $(OBJ_DIR)
-
-fclean: clean
-	$(RM) $(NAME)
-	$(RM) $(LN_NAME)
-	$(RM) test
-
-re: fclean all
-
-$(NAME): $(OBJS)
-	$(CC) $(OBJS) -shared -o $(NAME)
-	ln -sf $(NAME) $(LN_NAME)
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) -I. -c -fPIC $< -o $@
-
-$(OBJS): | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
+	$(CC) -c $(CFLAGS) $< -o $@
 
 $(OBJ_DIR):
-	mkdir $(OBJ_DIR)
+	mkdir -p $(OBJ_DIR)
 
-test: $(NAME)
-	gcc test.c -o test
-	LD_PRELOAD=./$(LN_NAME) ./test
+$(LIB_DIR):
+	mkdir -p $(LIB_DIR)
 
-ls: $(NAME)
-	LD_PRELOAD=./$(LN_NAME) ls -lR ~/
+test: re $(TEST_PROG)
+	LD_PRELOAD=./$(SYMLINK) ./$(TEST_PROG)
 
-emacs: $(NAME)
-	LD_PRELOAD=./$(LN_NAME) emacs test.c
+$(TEST_PROG): testfiles/main.c $(NAME)
+	$(CC) -o $@ $< -I$(INCLUDE_DIR) -L$(LIB_DIR) -lft_malloc -Wl,-rpath=$(LIB_DIR)
 
-.PHONY: all clean fclean re test ls emacs
+clean :
+	rm -f $(TEST_PROG)
+	rm -rf $(OBJ_DIR)
+
+fclean : clean
+	rm -rf $(LIB_DIR)
+
+re : fclean all
+
+.PHONY	: all clean fclean re test
