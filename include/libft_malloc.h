@@ -39,29 +39,19 @@ typedef struct  s_block
 
 typedef struct  s_pages
 {
+    int             type;
     size_t          page_size;
     size_t          space_left;
-    int             type;
     t_block         *blocks;
     struct s_pages  *next;
     struct s_pages  *prev;
 }               t_pages;
-
-typedef struct  s_free_list
-{
-    struct s_free_list  *next;
-}               t_free_list;
 
 typedef struct  s_data
 {
     t_pages     *tiny_pages;
     t_pages     *small_pages;
     t_pages     *large_pages;
-    size_t      size_alloc;
-    int         type;
-    void        *ptr;
-    size_t      total_size_alloc;
-    size_t      total_pages_size;
 }               t_data;
 
 // Global Data def
@@ -71,7 +61,18 @@ extern  t_data  data;
 void    *malloc(size_t size);
 void    free(void *ptr);
 void    *realloc(void *ptr, size_t size);
+void	*calloc(size_t count, size_t size);
 void    show_alloc_mem(void);
+
+// Page management
+t_pages  *get_page(size_t size, int type);
+t_pages *is_in_page(void *ptr);
+
+// Block management
+t_block *get_block(size_t size, t_pages *page);
+t_block *block_exist(t_pages *page, void *ptr);
+t_block *new_block(size_t size, void *addr);
+void    create_sub_block(t_block *block, size_t size);
 
 // Print functions
 void    print_str_and_addr(char *str, void *addr);
@@ -81,14 +82,7 @@ void    print_str(char *str);
 void    print_number(size_t nb);
 void	ft_putnbr_base_fd(size_t n, int base, int fd);
 void	ft_putstr_fd(char *s, int fd);
-
-// Page management
-t_pages *get_pages(size_t size, int type);
-
-// Block management
-void    *allocate_block(size_t size);
-t_block *free_block_available(size_t size);
-t_block *block_exist(t_block *block);
+void    print_hex(int *ptr, size_t size);
 
 // Tools function
 size_t	ft_strlen(const char *s);

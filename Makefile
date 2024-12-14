@@ -25,7 +25,7 @@ CC := gcc
 
 TEST_PROG := testprog
 
-CFLAGS := -Wall -Wextra -Werror -shared -fPIC -I$(INCLUDE_DIR)
+CFLAGS := -Wall -Wextra -Werror -fPIC -shared -I$(INCLUDE_DIR)
 
 ifeq ($(HOSTTYPE),)
 	HOSTTYPE := $(shell uname -m)_$(shell uname -s)
@@ -34,11 +34,11 @@ endif
 all : $(NAME)
 
 $(NAME) : Makefile $(OBJS) | $(LIB_DIR)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) -lpthread
 	ln -sf $(NAME_NO_PATH) $(SYMLINK)
 
 $(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -I$(INCLUDE_DIR)
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)

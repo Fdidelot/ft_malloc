@@ -2,35 +2,38 @@
 
 t_data  data;
 
-size_t  align_size(size_t size, size_t alignment)
+void    *calloc(size_t count, size_t size)
 {
-    size = (size + (alignment - 1)) & ~(alignment - 1);
-    return size;
-}
+    size_t  array;
+    void    *ptr;
 
-int     get_type(size_t size)
-{
-    if ((long int)size <= TINY_ALLOC)
-        return TINY;
-    if ((long int)size <= SMALL_ALLOC)
-        return SMALL;
-    return LARGE;
+    if (!size)
+        return NULL;
+    array = count * size;
+    ptr = malloc(array);
+    if (ptr == NULL)
+        return NULL;
+    ft_memset(ptr, 0, array);
+    return (ptr);
+
 }
 
 void    *malloc(size_t size)
 {
-    size = align_size(size, 16);
+    t_pages *page = NULL;
+    t_block *block = NULL;
+
+    size = align_size(size + BLOCK_HEADER, 16);
     if (size > MAX_ALLOCATION_SIZE)
     {
         ft_putstr_fd("Too big allocation\n", 2);
         return (NULL);
     }
-    data.size_alloc = size;
-    size = size + BLOCK_HEADER;
-    data.type = get_type(size);
-    data.ptr = NULL;
-    if((data.ptr = free_block_available(size)) != NULL)
-        return (data.ptr);
-    data.ptr = allocate_block(size);
-    return (data.ptr);
+    page = get_page(size, get_type(size));
+    if (page == NULL)
+        return NULL;
+    block = get_block(size, page);
+    if (block == NULL)
+        return NULL;
+    return ((void *)block + BLOCK_HEADER);
 }

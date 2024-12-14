@@ -1,12 +1,26 @@
 #include "libft_malloc.h"
 
-void    *warning_bypass(t_block *addr)
+void    create_sub_block(t_block *block, size_t size)
 {
-    return ((char *)addr + BLOCK_HEADER);
+    size_t  diff = align_size(block->size - size, 16);
+    t_block *new;
+
+    if (diff > BLOCK_HEADER)
+    {
+        block->size = size;
+        new = new_block(diff, (void *)block + block->size);
+        new->is_free = 1;
+        new->prev = block;
+        new->next = block->next;
+        if (block->next)
+            block->next->prev = new;
+        block->next = new;
+    }
 }
 
 void    *realloc(void *ptr, size_t size)
 {
+    t_pages *page;
     t_block *block;
     void    *new;
 
@@ -17,15 +31,25 @@ void    *realloc(void *ptr, size_t size)
         free(ptr);
         return NULL;
     }
-    block = block_exist((t_block*)((char *)ptr - BLOCK_HEADER));
+    page = is_in_page(ptr);
+    if (page == NULL)
+        return NULL;
+    block = block_exist(page, ptr);
     if (block == NULL || block->is_free == 1)
         return NULL;
-    if (block->size >= size)
+    if (block->size == size + BLOCK_HEADER)
         return (ptr);
+    // if (!(page->type & LARGE))
+    // {
+        if (block->size - BLOCK_HEADER > size)
+        {
+    //         create_sub_block(block, size);
+            return ptr;
+        }
+    // }
     new = malloc(size);
-    if (new == NULL)
-        return NULL;
+    // ft_memcpy(new, ptr, size > (block->size - BLOCK_HEADER) ? block->size - BLOCK_HEADER : size);
     ft_memcpy(new, ptr, block->size - BLOCK_HEADER);
-    free(warning_bypass(block));
+    free(ptr);
     return (new);
 }

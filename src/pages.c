@@ -1,33 +1,19 @@
 #include "libft_malloc.h"
 
-t_pages *push_page_front(t_pages *page, t_pages **head)
+void    push_page_front(t_pages *page, t_pages **head)
 {
     page->next = *head;
     page->prev = NULL;
     if (*head)
         (*head)->prev = page;
-    return page;
+    *head = page;
 }
 
-size_t  get_page_size(size_t size_alloc, int type)
+t_pages *create_page(size_t size)
 {
-    size_t page_size;
-
-    if (type & TINY)
-        page_size = TINY_PAGE_SIZE;
-    else if (type & SMALL)
-        page_size = SMALL_PAGE_SIZE;
-    else if (type & LARGE)
-        page_size = align_size(size_alloc + PAGE_HEADER, PAGE_SIZE);
-    return (page_size);
-}
-
-t_pages *create_page(size_t size_alloc)
-{
-    size_t  page_size = get_page_size(size_alloc, data.type);
     t_pages *new_page;
 
-    new_page = mmap(NULL, page_size, PROT_READ | PROT_WRITE
+    new_page = mmap(NULL, size, PROT_READ | PROT_WRITE
                                    , MAP_PRIVATE | MAP_ANONYMOUS
                                    , -1, 0);
     if (new_page == MAP_FAILED)
@@ -36,64 +22,50 @@ t_pages *create_page(size_t size_alloc)
         return (NULL);
     }
     ft_memset(new_page, 0, PAGE_HEADER);
-    new_page->page_size = page_size;
-    new_page->space_left = page_size - PAGE_HEADER;
-    data.total_pages_size += page_size;
+    new_page->page_size = size;
+    new_page->space_left = size - PAGE_HEADER;
     return (new_page);
 }
 
-t_pages *get_large_page(size_t size)
+t_pages *available_page(size_t size, t_pages **head, int type)
 {
-    t_pages *page;
+    t_pages *pages = *head;
+    size_t  page_size;
 
-    page = create_page(size);
-    if (page == NULL)
-        return NULL;
-    data.large_pages = push_page_front(page, &(data.large_pages));
-    return page;
-}
-
-t_pages *get_tiny_page(size_t size)
-{
-    t_pages *tmp_page = data.tiny_pages;
-
-    while (tmp_page)
+    while (pages)
     {
-        if (tmp_page->space_left > size)
-            return (tmp_page);
-        tmp_page = tmp_page->next;
+        if (pages->space_left >= size)
+            return pages;
+        pages = pages->next;
     }
-    tmp_page = create_page(size);
-    if (tmp_page)
-        data.tiny_pages = push_page_front(tmp_page, &(data.tiny_pages));
-    return (tmp_page);
+    if (type & SMALL)
+        page_size = SMALL_PAGE_SIZE;
+    else if (type & TINY)
+        page_size = TINY_PAGE_SIZE;
+    pages = create_page(page_size);
+    if (type & SMALL)
+        pages->type = SMALL;
+    else if (type & TINY)
+        pages->type = TINY;
+    push_page_front(pages, head);
+    return pages;
 }
 
-t_pages *get_small_page(size_t size)
+t_pages *get_page(size_t size, int type)
 {
-    t_pages *tmp_page = data.small_pages;
-
-    while (tmp_page)
-    {
-        if (tmp_page->space_left >= size)
-            return (tmp_page);
-        tmp_page = tmp_page->next;
-    }
-    tmp_page = create_page(size);
-    if (tmp_page)
-        data.small_pages = push_page_front(tmp_page, &(data.small_pages));
-    return (tmp_page);
-}
-
-t_pages *get_pages(size_t size, int type)
-{
-    t_pages *page;
+    t_pages *page = NULL;
 
     if (type & LARGE)
-        page = get_large_page(size);
-    else if (type & TINY)
-        page = get_tiny_page(size);
+    {
+        page = create_page(align_size(size + PAGE_HEADER, PAGE_SIZE));
+        if (page == NULL)
+            return NULL;
+        page->type = LARGE;
+        push_page_front(page, &(data.large_pages));
+    }
     else if (type & SMALL)
-        page = get_small_page(size);
-    return (page);
+        page = available_page(size, &(data.small_pages), type);
+    else if (type & TINY)
+        page = available_page(size, &(data.tiny_pages), type);
+    return page;
 }
