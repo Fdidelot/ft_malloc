@@ -33,9 +33,6 @@ t_block *get_block(size_t size, t_pages *page)
         if (blocks->is_free == 1 && blocks->size >= size)
         {
             blocks->is_free = 0;
-            if (blocks->size == size)
-                return blocks;
-            // create_sub_block(blocks, size);
             return blocks;
         }
         blocks = blocks->next;

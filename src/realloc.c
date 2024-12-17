@@ -39,16 +39,9 @@ void    *realloc(void *ptr, size_t size)
         return NULL;
     if (block->size == size + BLOCK_HEADER)
         return (ptr);
-    // if (!(page->type & LARGE))
-    // {
-        if (block->size - BLOCK_HEADER > size)
-        {
-    //         create_sub_block(block, size);
-            return ptr;
-        }
-    // }
+    if (block->size - BLOCK_HEADER > size)
+        return ptr;
     new = malloc(size);
-    // ft_memcpy(new, ptr, size > (block->size - BLOCK_HEADER) ? block->size - BLOCK_HEADER : size);
     ft_memcpy(new, ptr, block->size - BLOCK_HEADER);
     free(ptr);
     return (new);

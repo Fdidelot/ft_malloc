@@ -6,7 +6,7 @@ void    print_hex(int *ptr, size_t size)
     char *c = (char *)ptr;
     size_t left_part;
     size_t right_part;
-    int is_zero = 0;
+    size_t is_zero = 0;
 
     while (i < size)
     {
@@ -16,26 +16,19 @@ void    print_hex(int *ptr, size_t size)
             is_zero += 1;
         else
             is_zero = 0;
-        if (is_zero < 2)
+        if (is_zero == 2)
+        {
+            print_str(".. ");
+        }
+        else if (is_zero < 2)
         {
             ft_putnbr_base_fd(left_part, 16, 1);
             ft_putnbr_base_fd(right_part, 16, 1);
             if (i + 1 < size)
                 print_str(" ");
-            c = c + 1;
-            i += 1;
         }
-        else
-        {
-            print_str("00 .. 00 ");
-            while (i < size && left_part == 0 && right_part == 0)
-            {
-                left_part = (*c & 0xF0) >> 4;
-                right_part = (*c & 0xF);
-                i += 1;
-                c += 1;
-            }
-        }
+        c = c + 1;
+        i += 1;
     }
 }
 

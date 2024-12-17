@@ -1,10 +1,11 @@
 #include "libft_malloc.h"
 
-void    show_alloc_mem(void)
+void    show_alloc_mem_ex(void)
 {
-    print_str("Tiny :\n");
     t_pages *large = data.tiny_pages;
     t_block *blocks;
+
+    print_str("Tiny :\n");
     while (large)
     {
         print_str("page :");print_addr(large);
@@ -30,7 +31,7 @@ void    show_alloc_mem(void)
             print_str("]\n");
             print_str(" Content in hexadecimal: [");
             print_hex((int *)((void *)blocks + BLOCK_HEADER), blocks->size - BLOCK_HEADER);
-            print_str("]\n--------------\n");
+            print_str("]\n  --------------\n");
             blocks = blocks->next;
         }
         large = large->next;
@@ -62,7 +63,7 @@ void    show_alloc_mem(void)
             print_str("]\n");
             print_str(" Content in hexadecimal: [");
             print_hex((int *)((void *)blocks + BLOCK_HEADER), blocks->size - BLOCK_HEADER);
-            print_str("]\n--------------\n");
+            print_str("]\n  --------------\n");
             blocks = blocks->next;
         }
         large = large->next;
@@ -94,9 +95,58 @@ void    show_alloc_mem(void)
             print_str("]\n");
             print_str(" Content in hexadecimal: [");
             print_hex((int *)((void *)blocks + BLOCK_HEADER), blocks->size - BLOCK_HEADER);
-            print_str("]\n--------------\n");
+            print_str("]\n  --------------\n");
             blocks = blocks->next;
         }
         large = large->next;
     }
+}
+
+size_t  display_block(t_block *blocks)
+{
+    size_t  total = 0;
+
+    while (blocks)
+    {
+        if (blocks->is_free == 0)
+        {
+            print_addr((void *)blocks + BLOCK_HEADER);
+            print_str(" - ");
+            print_addr((void *)blocks + blocks->size);
+            print_str(" : ");
+            print_number(blocks->size - BLOCK_HEADER);
+            print_str(" bytes\n");
+            total += blocks->size - BLOCK_HEADER;
+        }
+        blocks = blocks->next;
+    }
+    return total;
+}
+
+size_t  display_page(t_pages *page)
+{
+    size_t total = 0;
+    
+    while (page)
+    {
+        print_addr(page);
+        print_str("\n");
+        total += display_block(page->blocks);
+        page = page->next;
+    }
+    return total;
+}
+
+void    show_alloc_mem(void)
+{
+    size_t total = 0;
+    print_str("TINY : ");
+    total += display_page(data.tiny_pages);
+    print_str("SMALL : ");
+    total += display_page(data.small_pages);
+    print_str("LARGE : ");
+    total += display_page(data.large_pages);
+    print_str("Total : ");
+    print_number(total);
+    print_str(" bytes\n");
 }
