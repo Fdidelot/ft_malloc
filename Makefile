@@ -67,7 +67,7 @@ fclean : clean
 
 re : fclean all
 
-cor: test0w test0 test1w test1 test2w test2 test3w test3 test4 test5w test5
+cor: all test0w test0 test1w test1 test2w test2 test3w test3 test4 test5w test5
 
 test0w: clean
 	$(CC) -o test0 tests/test0.c && /usr/bin/time -v ./test0
