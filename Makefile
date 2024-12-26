@@ -67,6 +67,8 @@ fclean : clean
 
 re : fclean all
 
+cor: test0w test0 test1w test1 test2w test2 test3w test3 test4 test5w test5
+
 test0w: clean
 	$(CC) -o test0 tests/test0.c && /usr/bin/time -v ./test0
 test0: clean
@@ -83,8 +85,6 @@ test3w: clean
 	$(CC) -o test3 tests/test3.c && ./test3
 test3: clean
 	$(CC) -o test3 tests/test3.c -L./lib -lft_malloc && ./tests/run_linux.sh ./test3
-test4w: clean
-	$(CC) -o test4 tests/test4.c && ./test4
 test4: clean
 	$(CC) -o test4 tests/test4.c -L./lib -lft_malloc && ./tests/run_linux.sh ./test4
 test5w: clean
@@ -92,4 +92,4 @@ test5w: clean
 test5: clean
 	$(CC) -o test5 tests/test5.c -L./lib -lft_malloc && ./tests/run_linux.sh ./test5
 
-.PHONY	: all clean fclean re test test0
+.PHONY	: all clean fclean re test test0w test0 test1w test1 test2w test2 test3w test3 test4 test5w test5
